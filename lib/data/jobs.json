@@ -1,0 +1,79 @@
+{
+  "jobs": {
+    "job1": {
+      "title": "Senior Flutter Developer",
+      "company": "Tech Innovations Inc.",
+      "description": "We are seeking a talented Senior Flutter Developer to join our innovative mobile development team.",
+      "location": {
+        "city": "San Francisco",
+        "state": "CA",
+        "type": "Onsite"
+      },
+      "type": "fullTime",
+      "salary": 150000,
+      "postedDate": "2025-02-10T19:34:27+05:30",
+      "requirements": [
+        "5+ years of mobile app development experience",
+        "Expert knowledge of Flutter and Dart",
+        "Strong understanding of state management patterns",
+        "Experience with Firebase and cloud services"
+      ],
+      "qualifications": {
+        "education": "Bachelor's degree in Computer Science or related field",
+        "experience": "5+ years"
+      },
+      "status": "active",
+      "applicationUrl": "https://techinnovations.com/careers/senior-flutter-developer"
+    },
+    "job2": {
+      "title": "Machine Learning Engineer",
+      "company": "AI Solutions Lab",
+      "description": "Looking for an experienced Machine Learning Engineer to develop AI solutions",
+      "location": {
+        "city": "New York",
+        "state": "NY",
+        "type": "Onsite"
+      },
+      "type": "fullTime",
+      "salary": 160000,
+      "postedDate": "2025-02-10T19:34:27+05:30",
+      "requirements": [
+        "Master's or PhD in Machine Learning, Computer Science or related field",
+        "Strong experience with Python and ML frameworks",
+        "Knowledge of deep learning and neural networks",
+        "Experience with TensorFlow or PyTorch"
+      ],
+      "qualifications": {
+        "education": "Master's degree in Computer Science or related field",
+        "experience": "3+ years"
+      },
+      "status": "active",
+      "applicationUrl": "https://aisolutionslab.com/careers/machine-learning-engineer"
+    },
+    "job3": {
+      "title": "Senior UI/UX Designer",
+      "company": "Design Dynamics",
+      "description": "Seeking a creative UI/UX Designer to craft exceptional user experiences",
+      "location": {
+        "city": "Remote",
+        "state": "Remote",
+        "type": "Remote"
+      },
+      "type": "remote",
+      "salary": 130000,
+      "postedDate": "2025-02-10T19:34:27+05:30",
+      "requirements": [
+        "5+ years of UI/UX design experience",
+        "Expert in Figma and design tools",
+        "Strong portfolio of web and mobile designs",
+        "Experience with user research and testing"
+      ],
+      "qualifications": {
+        "education": "Bachelor's degree in Design or related field",
+        "experience": "5+ years"
+      },
+      "status": "active",
+      "applicationUrl": "https://designdynamics.com/careers/senior-ui-ux-designer"
+    }
+  }
+}

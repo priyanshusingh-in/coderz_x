@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Function to check if the request is from an authenticated user
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Function to check if the request is from an admin
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    match /jobs/{jobId} {
+      // Allow reading job listings to everyone
+      allow read: if true;
+      
+      // Only allow write operations from admin users
+      allow write: if isAdmin();
+      
+      // Add validation rules for job document structure
+      allow create, update: if isAdmin() && 
+        request.resource.data.keys().hasAll(['title', 'type', 'location', 'description']) && 
+        request.resource.data.title is string && 
+        request.resource.data.type is string && 
+        request.resource.data.location is string && 
+        request.resource.data.description is string;
+    }
+
+    // Protect admin collection
+    match /admins/{userId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
