@@ -8,6 +8,9 @@ class AppTheme {
   static const Color spaceBlack = Color(0xFF0A0A0F);
   static const Color surfaceBlack = Color(0xFF121218);
   static const Color cardBlack = Color(0xFF1A1A23);
+  static const Color textPrimary = Color(0xFFFFFFFF);
+  static const Color textSecondary = Color(0xFFE0E0E0);
+  static const Color textTertiary = Color(0xFFBDBDBD);
 
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
@@ -101,24 +104,24 @@ class AppTheme {
     ),
     textTheme: const TextTheme(
       displayLarge: TextStyle(
-        color: Colors.white,
+        color: textPrimary,
         fontSize: 32,
         fontWeight: FontWeight.bold,
         letterSpacing: -1,
       ),
       displayMedium: TextStyle(
-        color: Colors.white,
+        color: textPrimary,
         fontSize: 24,
         fontWeight: FontWeight.bold,
         letterSpacing: -0.5,
       ),
       bodyLarge: TextStyle(
-        color: Colors.white70,
+        color: textSecondary,
         fontSize: 16,
         letterSpacing: 0.1,
       ),
       labelLarge: TextStyle(
-        color: Colors.white,
+        color: textPrimary,
         fontSize: 14,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.1,
@@ -206,15 +209,15 @@ class AppColors {
 
   // Glassmorphism effect for cards in dark mode
   static BoxDecoration get darkGlassCard => BoxDecoration(
-    color: AppTheme.cardBlack.withOpacity(0.7),
+    color: AppTheme.cardBlack.withOpacity(0.85),
     borderRadius: BorderRadius.circular(16),
     border: Border.all(
-      color: Colors.white.withOpacity(0.1),
+      color: Colors.white.withOpacity(0.15),
       width: 1,
     ),
     boxShadow: [
       BoxShadow(
-        color: AppTheme.primaryBlue.withOpacity(0.1),
+        color: AppTheme.primaryBlue.withOpacity(0.2),
         blurRadius: 20,
         spreadRadius: -5,
       ),

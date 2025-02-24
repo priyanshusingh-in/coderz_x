@@ -122,52 +122,70 @@ class _JobListingPageState extends State<JobListingPage> {
 
   Widget _buildSearchBar() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: TextField(
-        controller: _searchController,
-        style: Theme.of(context).textTheme.bodyLarge,
-        onChanged: (value) {
-          // Debounce search to avoid too many requests
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (value == _searchController.text) {
-              context.read<JobBloc>().add(SearchJobsRequested(query: value));
-            }
-          });
-        },
-        decoration: InputDecoration(
-          hintText: 'Search jobs...',
-          hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey.shade500,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        height: 60,
+        child: TextField(
+          controller: _searchController,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                letterSpacing: 0.2,
+                height: 1.4,
               ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: Theme.of(context).colorScheme.primary,
+          onChanged: (value) {
+            if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+            _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+              if (value == _searchController.text) {
+                context.read<JobBloc>().add(SearchJobsRequested(query: value));
+              }
+            });
+          },
+          decoration: InputDecoration(
+            hintText: 'Search for jobs...',
+            hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.grey.shade400 
+                      : Colors.grey.shade600,
+                  letterSpacing: 0.2,
+                ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Icon(
+                Icons.search_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 24,
+              ),
+            ),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    onPressed: () {
+                      _searchController.clear();
+                      _applySearch();
+                    },
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                    splashRadius: 24,
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
           ),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  onPressed: () {
-                    _searchController.clear();
-                    _applySearch();
-                  },
-                  icon: Icon(
-                    Icons.clear,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
     );
@@ -175,12 +193,14 @@ class _JobListingPageState extends State<JobListingPage> {
 
   Widget _buildJobList(List<JobEntity> jobs) {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       itemCount: jobs.length,
       itemBuilder: (context, index) {
         final job = jobs[index];
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.only(bottom: 16.0),
           child: JobListingCard(
             job: job,
             onTap: () {
@@ -216,91 +236,86 @@ class JobListingCard extends StatelessWidget {
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Card(
-      elevation: 0,
+      elevation: isDarkMode ? 0 : 1,
+      shadowColor: Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(
+          color: theme.colorScheme.outline.withOpacity(isDarkMode ? 0.1 : 0.05),
+          width: 1,
+        ),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: isDarkMode ? AppColors.darkGlassCard : null,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                job.title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                job.company,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.8),
-                ),
-              ),
-              const SizedBox(height: 12),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    job.type == JobType.remote
-                        ? Icons.public
-                        : Icons.location_on_outlined,
-                    size: 16,
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                  const SizedBox(width: 4),
                   Expanded(
-                    child: Text(
-                      job.location,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          job.title,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          job.company,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.8),
+                            letterSpacing: -0.2,
+                            height: 1.4,
+                            fontWeight: FontWeight.w500
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 16,
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        DateFormat('dd MMM yyyy').format(job.postedDate),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
-                        ),
-                      ),
-                    ],
-                  ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       job.type.displayName,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
                       ),
                     ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  _buildInfoChip(
+                    context,
+                    icon: job.type == JobType.remote
+                        ? Icons.public_rounded
+                        : Icons.location_on_rounded,
+                    label: job.location,
+                  ),
+                  const SizedBox(width: 16),
+                  _buildInfoChip(
+                    context,
+                    icon: Icons.calendar_today_rounded,
+                    label: DateFormat('MMM d, yyyy').format(job.postedDate),
                   ),
                 ],
               ),
@@ -308,6 +323,33 @@ class JobListingCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoChip(BuildContext context, {
+    required IconData icon,
+    required String label,
+  }) {
+    final theme = Theme.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: theme.colorScheme.onSurface.withOpacity(0.7),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.7),
+            letterSpacing: -0.3,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 }

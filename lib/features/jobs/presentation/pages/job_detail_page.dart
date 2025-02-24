@@ -41,13 +41,16 @@ class JobDetailPage extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 200,
       pinned: true,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark 
+          ? Colors.transparent 
+          : Theme.of(context).primaryColor,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
                 Theme.of(context).primaryColor,
-                Theme.of(context).primaryColor.withOpacity(0.7),
+                Theme.of(context).primaryColor.withOpacity(0.8),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -113,7 +116,11 @@ class JobDetailPage extends StatelessWidget {
                   _buildSectionTitle(context, 'Job Description'),
                   Text(
                     job.description,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[300]
+                          : Colors.grey[800],
+                    ),
                   ),
                   const SizedBox(height: 16),
                   _buildSectionTitle(context, 'Requirements'),
@@ -150,10 +157,12 @@ class JobDetailPage extends StatelessWidget {
                     children: job.skills.map((skill) {
                       return Chip(
                         label: Text(skill),
-                        backgroundColor:
-                            Theme.of(context).primaryColor.withOpacity(0.1),
+                        backgroundColor: Theme.of(context).brightness == Brightness.dark
+                            ? Theme.of(context).primaryColor.withAlpha(51)
+                            : Theme.of(context).primaryColor.withAlpha(25),
                         labelStyle: TextStyle(
                           color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w600,
                         ),
                       );
                     }).toList(),
@@ -191,7 +200,11 @@ class JobDetailPage extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     job.location,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[300]
+                          : Colors.grey[800],
+                    ),
                   ),
                 ],
               ),
@@ -244,20 +257,50 @@ class JobDetailPage extends StatelessWidget {
                       try {
                         final Uri url = Uri.parse(job.applicationUrl!);
                         if (await canLaunchUrl(url)) {
-                          await launchUrl(url,
-                              mode: LaunchMode.externalApplication);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content:
-                                    Text('Could not open application URL')),
+                          final launched = await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                            webViewConfiguration: const WebViewConfiguration(
+                              enableJavaScript: true,
+                              enableDomStorage: true,
+                            ),
                           );
+                          if (!launched) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Failed to open the application URL. Please try again.'),
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          }
+                        } else {
+                          if (context.mounted) {
+                            // Try fallback to external browser if available
+                            final fallbackLaunched = await launchUrl(
+                              url,
+                              mode: LaunchMode.platformDefault,
+                            );
+                            if (!fallbackLaunched) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Could not open the application URL. Please copy the link manually.'),
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          }
                         }
                       } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text('Error opening application URL')),
-                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error accessing the URL: ${e.toString()}'),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        }
                       }
                     }
                   : null,

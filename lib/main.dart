@@ -6,6 +6,8 @@ import 'core/error/error_handler.dart';
 import 'core/error/error_widget.dart';
 import 'core/theme/app_theme.dart';
 import 'features/jobs/presentation/pages/job_listing_page.dart';
+import 'features/jobs/presentation/pages/job_detail_page.dart';
+import 'features/jobs/domain/entities/job_entity.dart';
 import 'features/authentication/presentation/pages/login_page.dart';
 import 'secrets/firebase_options.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -87,6 +89,16 @@ class CoderzXApp extends StatelessWidget {
               child: child ?? const SizedBox.shrink(),
             ),
           );
+        },
+        initialRoute: '/',
+        onGenerateRoute: (settings) {
+          if (settings.name == '/job-details') {
+            final job = settings.arguments as JobEntity;
+            return MaterialPageRoute(
+              builder: (context) => JobDetailPage(jobId: job.id),
+            );
+          }
+          return null;
         },
         home: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
