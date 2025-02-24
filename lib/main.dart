@@ -17,14 +17,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    try {
-      Firebase.app('coderz_x');
-    } catch (e) {
-      await Firebase.initializeApp(
-        name: 'coderz_x',
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
+    // Initialize Firebase only if not already initialized
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+      name: 'thecoderz-x',
+    );
     
     await Hive.initFlutter();
     await ServiceLocator.setup().then((_) {

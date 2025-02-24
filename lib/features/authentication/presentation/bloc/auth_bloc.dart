@@ -7,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/error/error_handler.dart';
 import '../../domain/repositories/auth_repository.dart' as repo;
 import '../../domain/enums/auth_type.dart';
-import '../../domain/models/pigeon_user_details.dart';
 
 part 'auth_state.dart';
 part 'auth_event.dart';
@@ -32,10 +31,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
       },
       onError: (error) {
-        emit(AuthError(AppError(
-          message: 'Authentication state error: ${error.toString()}',
-          type: ErrorType.authentication,
-        )));
+        add(CheckAuthStatusRequested());
       },
     );
   }
@@ -48,40 +44,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final result = await _authRepository.signInWithGoogle();
 
       if (result.isSuccess) {
-        try {
-          // Add a delay to ensure Firebase auth state is fully updated
-          await Future.delayed(const Duration(seconds: 1));
-          
-          final userDetails = PigeonUserDetails.fromAuthResult(result);
-          
-          // Verify the current Firebase user matches our authenticated user
-          final currentUser = await _authRepository.getCurrentUser();
-          if (currentUser.isSuccess && currentUser.userId == userDetails.userId) {
-            emit(AuthAuthenticated(
-                userId: userDetails.userId,
-                email: userDetails.email,
-                displayName: userDetails.displayName,
-                type: userDetails.authType));
-          } else {
-            throw Exception('Failed to verify authenticated user');
-          }
-        } catch (e) {
-          final appError = AppError(
-              message: 'Authentication state verification failed: ${e.toString()}',
-              type: ErrorType.authentication);
-          emit(AuthError(appError));
-        }
+        emit(AuthAuthenticated(
+            userId: result.userId!,
+            email: result.email ?? '',
+            displayName: result.displayName ?? '',
+            type: result.authType ?? AuthType.google));
       } else {
-        final appError = AppError(
-            message: result.errorMessage ?? 'Authentication failed',
-            type: ErrorType.authentication);
-        emit(AuthError(appError));
+        emit(AuthError(AppError(
+          message: result.errorMessage ?? 'Google sign in failed',
+          type: ErrorType.authentication,
+        )));
       }
-    } catch (e) {
-      final appError = AppError(
-          message: e.toString(),
-          type: ErrorType.authentication);
-      emit(AuthError(appError));
+    } catch (error) {
+      emit(AuthError(AppError(
+        message: error.toString(),
+        type: ErrorType.authentication,
+      )));
     }
   }
 
@@ -93,98 +71,62 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final result = await _authRepository.signInWithApple();
 
       if (result.isSuccess) {
-        try {
-          // Add a delay to ensure Firebase auth state is fully updated
-          await Future.delayed(const Duration(seconds: 1));
-          
-          final userDetails = PigeonUserDetails.fromAuthResult(result);
-          
-          // Verify the current Firebase user matches our authenticated user
-          final currentUser = await _authRepository.getCurrentUser();
-          if (currentUser.isSuccess && currentUser.userId == userDetails.userId) {
-            emit(AuthAuthenticated(
-                userId: userDetails.userId,
-                email: userDetails.email,
-                displayName: userDetails.displayName,
-                type: userDetails.authType));
-          } else {
-            throw Exception('Failed to verify authenticated user');
-          }
-        } catch (e) {
-          final appError = AppError(
-              message: 'Authentication state verification failed: ${e.toString()}',
-              type: ErrorType.authentication);
-          emit(AuthError(appError));
-        }
+        emit(AuthAuthenticated(
+            userId: result.userId!,
+            email: result.email ?? '',
+            displayName: result.displayName ?? '',
+            type: result.authType ?? AuthType.apple));
       } else {
-        final appError = AppError(
-            message: result.errorMessage ?? 'Authentication failed',
-            type: ErrorType.authentication);
-        emit(AuthError(appError));
+        emit(AuthError(AppError(
+          message: result.errorMessage ?? 'Apple sign in failed',
+          type: ErrorType.authentication,
+        )));
       }
-    } catch (e) {
-      final appError = ErrorHandler.handleError(e);
-      ErrorHandler.logError(appError);
-      emit(AuthError(appError));
+    } catch (error) {
+      emit(AuthError(AppError(
+        message: error.toString(),
+        type: ErrorType.authentication,
+      )));
     }
   }
 
   void _onSignOut(SignOutRequested event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
-    
     try {
       await _authRepository.signOut();
       emit(AuthInitial());
     } catch (error) {
-      final appError = ErrorHandler.handleError(error);
-      ErrorHandler.logError(appError);
-      emit(AuthError(appError));
+      emit(AuthError(AppError(
+        message: error.toString(),
+        type: ErrorType.authentication,
+      )));
     }
-  }
-
-  @override
-  Future<void> close() async {
-    await _authStateSubscription?.cancel();
-    return super.close();
   }
 
   void _onCheckAuthStatus(
       CheckAuthStatusRequested event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
-
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        emit(AuthInitial());
-        return;
-      }
-
       final result = await _authRepository.getCurrentUser();
 
-      if (result.isSuccess) {
-        try {
-          final userDetails = PigeonUserDetails.fromAuthResult(result);
-          
-          // Verify the current Firebase user matches our authenticated user
-          if (currentUser.uid == userDetails.userId) {
-            emit(AuthAuthenticated(
-                userId: userDetails.userId,
-                email: userDetails.email,
-                displayName: userDetails.displayName,
-                type: userDetails.authType));
-          } else {
-            emit(AuthInitial());
-          }
-        } catch (e) {
-          emit(AuthInitial());
-        }
+      if (result.isSuccess && result.userId != null) {
+        emit(AuthAuthenticated(
+            userId: result.userId!,
+            email: result.email ?? '',
+            displayName: result.displayName ?? '',
+            type: result.authType ?? AuthType.google));
       } else {
         emit(AuthInitial());
       }
-    } catch (e) {
-      emit(AuthInitial());
+    } catch (error) {
+      emit(AuthError(AppError(
+        message: error.toString(),
+        type: ErrorType.authentication,
+      )));
     }
   }
+
+  @override
+  Future<void> close() {
+    _authStateSubscription?.cancel();
+    return super.close();
+  }
 } // End of AuthBloc class
-
-

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../authentication/domain/repositories/auth_repository.dart';
 import '../../../jobs/presentation/pages/job_listing_page.dart';
 import '../../domain/entities/profile_entity.dart';
@@ -64,38 +65,60 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _submitProfile() {
+  void _submitProfile() async {
+    if (!mounted) return;
     if (_formKey.currentState!.validate()) {
       final authRepository = ServiceLocator.get<AuthRepository>();
-      authRepository.getCurrentUser().then((result) {
-        if (result.isSuccess) {
-          final profile = ProfileEntity(
-            userId: result.userId!,
-            fullName: _fullNameController.text,
-            email: _emailController.text,
-            phoneNumber: _phoneController.text,
-            profession: _professionController.text,
-            skills: _skillsController.text,
-            location: _locationController.text,
-            dateOfBirth: _selectedDate,
-          );
+      final result = await authRepository.getCurrentUser();
+      if (!mounted) return;
+      if (result.isSuccess) {
+        final profile = ProfileEntity(
+          userId: result.userId!,
+          fullName: _fullNameController.text,
+          email: _emailController.text,
+          phoneNumber: _phoneController.text,
+          profession: _professionController.text,
+          skills: _skillsController.text,
+          location: _locationController.text,
+          dateOfBirth: _selectedDate,
+        );
 
-          context.read<ProfileBloc>().add(CreateProfileRequested(profile: profile));
-        }
-      });
+        if (!mounted) return;
+        context.read<ProfileBloc>().add(CreateProfileRequested(profile: profile));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ServiceLocator.get<ProfileBloc>(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Complete Your Profile'),
-          centerTitle: true,
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: isDarkMode ? Colors.transparent : Colors.white.withOpacity(0.8),
+        elevation: isDarkMode ? 0 : 1,
+        title: Text(
+          'Complete Your Profile',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: isDarkMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.bold,
+              ),
         ),
-        body: BlocConsumer<ProfileBloc, ProfileState>(
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: Container(
+        decoration: isDarkMode
+            ? AppColors.darkDotGridBackground
+            : AppColors.lightDotGridBackground,
+        child: BlocConsumer<ProfileBloc, ProfileState>(
           listener: (context, state) {
             if (state is ProfileLoaded) {
               Navigator.of(context).pushReplacement(
@@ -114,7 +137,7 @@ class _ProfilePageState extends State<ProfilePage> {
             }
 
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(16.0, kToolbarHeight + 32.0, 16.0, 16.0),
               child: Form(
                 key: _formKey,
                 child: Column(

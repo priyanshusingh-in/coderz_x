@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:coderz_x/core/theme/app_theme.dart';
 import 'package:coderz_x/features/jobs/domain/enums/job_type.dart';
+import 'package:coderz_x/features/profile/presentation/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -62,23 +63,26 @@ class _JobListingPageState extends State<JobListingPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: isDarkMode ? Colors.transparent : Colors.white.withOpacity(0.8),
+        elevation: isDarkMode ? 0 : 1,
         title: Text(
           'Job Listings',
-          style: Theme.of(context).textTheme.displayLarge?.copyWith(
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: isDarkMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.bold,
               ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(
-              Icons.bookmark_border,
+              Icons.person_outline,
               color: isDarkMode ? Colors.white : Colors.black87,
             ),
             onPressed: () {
-              context.read<JobBloc>().add(FetchBookmarkedJobsRequested());
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
+              );
             },
           ),
         ],
@@ -89,24 +93,26 @@ class _JobListingPageState extends State<JobListingPage> {
             : AppColors.lightDotGridBackground,
         child: Column(
           children: [
-            const SizedBox(height: 100), // Adjust for AppBar overlap
+            const SizedBox(height: kToolbarHeight + 16),
             _buildSearchBar(),
             Expanded(
-              child: BlocBuilder<JobBloc, JobState>(builder: (context, state) {
-                if (state is JobLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is JobError) {
-                  return Center(child: Text(state.error.toString()));
-                } else if (state is JobLoaded) {
-                  if (state.jobs.isEmpty) {
-                    return const Center(
-                      child: Text('No jobs found'),
-                    );
+              child: BlocBuilder<JobBloc, JobState>(
+                builder: (context, state) {
+                  if (state is JobLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is JobError) {
+                    return Center(child: Text(state.error.toString()));
+                  } else if (state is JobLoaded) {
+                    if (state.jobs.isEmpty) {
+                      return const Center(
+                        child: Text('No jobs found'),
+                      );
+                    }
+                    return _buildJobList(state.jobs);
                   }
-                  return _buildJobList(state.jobs);
-                }
-                return const Center(child: Text('Start searching for jobs'));
-              }),
+                  return const Center(child: Text('Start searching for jobs'));
+                },
+              ),
             ),
           ],
         ),
@@ -189,6 +195,10 @@ class _JobListingPageState extends State<JobListingPage> {
     );
   }
 }
+
+
+
+
 
 class JobListingCard extends StatelessWidget {
   final JobEntity job;

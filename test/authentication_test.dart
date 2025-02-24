@@ -10,8 +10,10 @@ void main() {
     late FirebaseAuthRepository authRepository;
 
     setUpAll(() async {
-      // Initialize Firebase for testing
-      await Firebase.initializeApp();
+      // Initialize Firebase for testing if not already initialized
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp();
+      }
     });
 
     setUp(() {

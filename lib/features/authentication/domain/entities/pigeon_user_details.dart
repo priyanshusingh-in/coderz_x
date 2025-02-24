@@ -1,58 +1,81 @@
 import 'package:equatable/equatable.dart';
+import '../enums/auth_type.dart';
+import '../repositories/auth_repository.dart';
 
 class PigeonUserDetails extends Equatable {
-  final String? uid;
-  final String? email;
-  final String? displayName;
-  final String? photoURL;
-  final List<String>? providers;
+  final String userId;
+  final String email;
+  final String displayName;
+  final AuthType authType;
 
   const PigeonUserDetails({
-    this.uid,
-    this.email,
-    this.displayName,
-    this.photoURL,
-    this.providers,
+    required this.userId,
+    required this.email,
+    required this.displayName,
+    required this.authType,
   });
 
-  factory PigeonUserDetails.fromMap(Map<String, dynamic> map) {
+  factory PigeonUserDetails.fromAuthResult(AuthResult result) {
+    if (!result.isSuccess || result.userId == null || result.userId!.isEmpty) {
+      throw Exception('Invalid authentication result: ${result.errorMessage ?? 'Unknown error'}');
+    }
+
+    final email = result.email ?? '';
+    final displayName = result.displayName ?? 'User';
+    final authType = result.authType ?? AuthType.unknown;
+
     return PigeonUserDetails(
-      uid: map['uid'] as String?,
-      email: map['email'] as String?,
-      displayName: map['displayName'] as String?,
-      photoURL: map['photoURL'] as String?,
-      providers: (map['providers'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList(),
+      userId: result.userId!,
+      email: email,
+      displayName: displayName,
+      authType: authType,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'uid': uid,
+      'userId': userId,
       'email': email,
       'displayName': displayName,
-      'photoURL': photoURL,
-      'providers': providers,
+      'authType': authType.toString(),
     };
   }
 
-  PigeonUserDetails copyWith({
-    String? uid,
-    String? email,
-    String? displayName,
-    String? photoURL,
-    List<String>? providers,
-  }) {
+  factory PigeonUserDetails.fromMap(Map<String, dynamic> map) {
     return PigeonUserDetails(
-      uid: uid ?? this.uid,
-      email: email ?? this.email,
-      displayName: displayName ?? this.displayName,
-      photoURL: photoURL ?? this.photoURL,
-      providers: providers ?? this.providers,
+      userId: map['userId']?.toString() ?? '',
+      email: map['email']?.toString() ?? '',
+      displayName: map['displayName']?.toString() ?? '',
+      authType: _parseAuthType(map['authType']?.toString() ?? ''),
     );
   }
 
+  factory PigeonUserDetails.fromList(List<Object?> list) {
+    if (list.length < 4) {
+      throw Exception('Invalid list format for PigeonUserDetails');
+    }
+
+    final Map<String, dynamic> map = {
+      'userId': list[0],
+      'email': list[1],
+      'displayName': list[2],
+      'authType': list[3]
+    };
+
+    return PigeonUserDetails.fromMap(map);
+  }
+
+  static AuthType _parseAuthType(String value) {
+    switch (value) {
+      case 'AuthType.google':
+        return AuthType.google;
+      case 'AuthType.apple':
+        return AuthType.apple;
+      default:
+        return AuthType.unknown;
+    }
+  }
+
   @override
-  List<Object?> get props => [uid, email, displayName, photoURL, providers];
+  List<Object?> get props => [userId, email, displayName, authType];
 }

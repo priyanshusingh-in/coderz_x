@@ -106,7 +106,7 @@ class FirebaseAuthRepository implements AuthRepository {
       final oAuthProvider = OAuthProvider('apple.com');
       final credential = oAuthProvider.credential(
         idToken: appleCredential.identityToken,
-        accessToken: appleCredential.authorizationCode,
+        rawNonce: appleCredential.authorizationCode,
       );
 
       // Sign in to Firebase
@@ -125,6 +125,7 @@ class FirebaseAuthRepository implements AuthRepository {
       await prefs.setString(_displayNameKey,
           appleCredential.givenName ?? userCredential.user?.displayName ?? '');
       await prefs.setString(_emailKey, userCredential.user?.email ?? '');
+      await prefs.setString(_authTypeKey, 'apple');
 
       return AuthResult.success(
         userId: userId,

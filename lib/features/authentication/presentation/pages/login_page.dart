@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../../core/di/service_locator.dart';
 import '../bloc/auth_bloc.dart';
 import '../../../jobs/presentation/pages/job_listing_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
@@ -31,7 +30,7 @@ class LoginPage extends StatelessWidget {
   Widget _buildLoginContent(BuildContext context, AuthState state) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -39,12 +38,14 @@ class LoginPage extends StatelessWidget {
               'assets/images/coderz_x_logo.png',
               height: 150,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             Text(
               'Welcome to CoderzX',
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             if (state is AuthLoading)
               const CircularProgressIndicator()
             else ...[
@@ -54,7 +55,7 @@ class LoginPage extends StatelessWidget {
                 onPressed: () => _signInWithGoogle(context),
                 icon: 'assets/icons/google_icon.svg',
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               _buildSignInButton(
                 context,
                 text: 'Sign in with Apple',
