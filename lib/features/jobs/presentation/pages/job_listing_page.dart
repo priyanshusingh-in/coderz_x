@@ -70,20 +70,25 @@ class _JobListingPageState extends State<JobListingPage> {
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: isDarkMode ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
               ),
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.person_outline,
-              color: isDarkMode ? Colors.white : Colors.black87,
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: Icon(
+                Icons.person_outline,
+                color: isDarkMode ? Colors.white : Colors.black87,
+                size: 28,
+              ),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                );
+              },
             ),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ProfilePage()),
-              );
-            },
           ),
         ],
       ),
@@ -99,18 +104,67 @@ class _JobListingPageState extends State<JobListingPage> {
               child: BlocBuilder<JobBloc, JobState>(
                 builder: (context, state) {
                   if (state is JobLoading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
                   } else if (state is JobError) {
-                    return Center(child: Text(state.error.toString()));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            state.error.toString(),
+                            style: Theme.of(context).textTheme.bodyLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    );
                   } else if (state is JobLoaded) {
                     if (state.jobs.isEmpty) {
-                      return const Center(
-                        child: Text('No jobs found'),
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off_rounded,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No jobs found',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ],
+                        ),
                       );
                     }
                     return _buildJobList(state.jobs);
                   }
-                  return const Center(child: Text('Start searching for jobs'));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.work_outline_rounded,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Start searching for jobs',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ),
@@ -121,70 +175,76 @@ class _JobListingPageState extends State<JobListingPage> {
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        height: 60,
-        child: TextField(
-          controller: _searchController,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                letterSpacing: 0.2,
-                height: 1.4,
-              ),
-          onChanged: (value) {
-            if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
-            _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-              if (value == _searchController.text) {
-                context.read<JobBloc>().add(SearchJobsRequested(query: value));
-              }
-            });
-          },
-          decoration: InputDecoration(
-            hintText: 'Search for jobs...',
-            hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).brightness == Brightness.dark 
-                      ? Colors.grey.shade400 
-                      : Colors.grey.shade600,
-                  letterSpacing: 0.2,
-                ),
-            prefixIcon: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Icon(
-                Icons.search_rounded,
-                color: Theme.of(context).colorScheme.primary,
-                size: 24,
-              ),
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Hero(
+      tag: 'searchBar',
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: isDarkMode
+              ? Theme.of(context).colorScheme.surface.withOpacity(0.8)
+              : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    onPressed: () {
-                      _searchController.clear();
-                      _applySearch();
-                    },
-                    icon: Icon(
-                      Icons.close_rounded,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 20,
-                    ),
-                    splashRadius: 24,
-                  )
-                : null,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
+          ],
+        ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          height: 60,
+          child: TextField(
+            controller: _searchController,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  letterSpacing: 0.2,
+                  height: 1.4,
+                ),
+            onChanged: (value) {
+              if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+              _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+                if (value == _searchController.text) {
+                  context.read<JobBloc>().add(SearchJobsRequested(query: value));
+                }
+              });
+            },
+            decoration: InputDecoration(
+              hintText: 'Search for jobs...',
+              hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade400
+                        : Colors.grey.shade600,
+                    letterSpacing: 0.2,
+                  ),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Icon(
+                  Icons.search_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        _applySearch();
+                      },
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20,
+                      ),
+                      splashRadius: 24,
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+            ),
           ),
         ),
       ),
@@ -236,8 +296,8 @@ class JobListingCard extends StatelessWidget {
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Card(
-      elevation: isDarkMode ? 0 : 1,
-      shadowColor: Colors.black.withOpacity(0.1),
+      elevation: isDarkMode ? 0 : 2,
+      shadowColor: Colors.black.withOpacity(0.15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(
@@ -250,7 +310,7 @@ class JobListingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Container(
           decoration: isDarkMode ? AppColors.darkGlassCard : null,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -267,11 +327,12 @@ class JobListingCard extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.3,
                             height: 1.2,
+                            color: theme.colorScheme.onSurface,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
                           job.company,
                           style: theme.textTheme.titleMedium?.copyWith(
@@ -331,25 +392,33 @@ class JobListingCard extends StatelessWidget {
     required String label,
   }) {
     final theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: theme.colorScheme.onSurface.withOpacity(0.7),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.7),
-            letterSpacing: -0.3,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              letterSpacing: -0.3,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }
